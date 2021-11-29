@@ -1,0 +1,86 @@
+---
+title: "Domestic Trips Clean"
+author: "Jack McGrath"
+date: "29/11/2021"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Domestic Trips Clean
+
+In this short exercise I will attempt to clean the data from the domestic trips csv that is located in the data folder so that it is ready for exploration and plotting.
+
+## Loading Libraries
+
+```{r, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+## Importing Data
+
+```{r}
+data <- read_csv("data/domestic-trips.csv")
+data
+```
+
+It seems as if R is having trouble importing this CSV. When I open up excel to view the spreadsheet I find out why. There is a bunch of metadata in the header of the
+CSV. The data that we are actually interested in starts on line 12 and spans for the first 6 columns. Let's use some read_csv parameters to help import the data so that we can clean it.
+
+## Clean Data
+
+```{r}
+cn <- c("Quarter", "Region", "Holiday", "Visiting", "Business", "Other")
+data <- read_csv("data/domestic-trips.csv", skip = 11, col_names = cn,
+                           n_max = 6804, col_select = cn)
+data
+```
+
+Now our data looks much nicer. Since our data starts at row 12 I used the skip parameter to skip the first 11 rows. I also set a column names variable to ensure that our columns are named appropriate and reflect the raw data. To make sure the rows that I want are selected I made sure to only select the rows that are in the column names vector. I also made sure to set a limit to the number of rows to import as there is copyright information on the last row.
+
+The first thing that I noticed was that there are a lot of NAs in the quarter column. It appears that when the name of a quarter is entered into a row that this quarter applies for all rows below it until another value is observed. There also appears to be quarters named "Total" which count the total observations for each quarter. We want to get rid of this as this is easy computable and irrelevant. Let's fix these issues.
+
+```{r}
+filled_quarter <- data %>% 
+  fill(Quarter, .direction = "down") %>% 
+  filter(Quarter != "Total")
+filled_quarter
+```
+
+Looks great. One thing I noticed while scrolling through this table was that some regions have significantly higher holiday, visiting, etc values than the other regions. When taking a closer look at these specific regions I notice that these are actually states within Australia whereas the other regions are cities. What seems to be happening is that all the cities within a region are grouped in order and the total for this state follows. To make sure that values are not double counted I will attempt to add a state column and put these cities in their respective state. I will also remove the rows that have the totals for the state. To do this I will do a case statement and set the state column to be the name of the state and fill the rest of the columns upward.
+
+```{r}
+states <- c("New South Wales", "Victoria", "Queensland", "South Australia",
+            "Western Australia", "Tasmania", "Northern Territory", "ACT")
+state_trips <- filled_quarter %>% mutate(State = case_when(
+  Region %in% states ~ Region,
+  TRUE ~ NA_character_)) %>% 
+  fill(State, .direction = "up") %>% 
+  filter(Region != State)
+state_trips
+```
+
+Great. Now we have removed the double counted values but haven't lost our ability to do analysis by state.
+
+Right now our data is in the "long" format. To be able to aggregate the data, analyse more thoroughly and create plots we need to pivot this data into the "long" format.
+
+```{r}
+tidy_trips <- state_trips %>% pivot_longer(cols = Holiday:Other, 
+                                            names_to = "Purpose", 
+                                            values_to = "Trips")
+tidy_trips
+```
+
+While the data is now ready for aggregation and plotting, I wish to see if there are any trends in the number of trips as time increases. To do this I will need to parse the quarter column into a date format. This way I can perform timeseries analysis while still having the option to have the date as a factor if needed.
+
+```{r}
+final_timed_trips <- tidy_trips %>% mutate(Quarter = parse_date(Quarter, 
+                                                        format = "%B quarter %Y"))
+final_timed_trips
+```
+
+## Data Exploration
+
