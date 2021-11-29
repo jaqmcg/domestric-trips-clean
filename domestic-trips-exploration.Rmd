@@ -1,0 +1,34 @@
+---
+title: "Domestic Trips Exploration"
+author: "Jack McGrath"
+date: "29/11/2021"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Loading Libraries
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+## Importing Data
+
+```{r}
+data <- read_csv("data/clean_trips.csv")
+data
+```
+
+## Exploration
+
+```{r}
+data %>% group_by(State) %>% 
+  summarise(ntrips = sum(Trips)) %>% 
+  ggplot() +
+  geom_col(aes(x = State, y = ntrips))
+```
+
