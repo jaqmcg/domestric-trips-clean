@@ -9,8 +9,6 @@ output: rmarkdown::github_document
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
-# Domestic Trips Clean
-
 In this short exercise I will attempt to clean the data from the domestic trips csv that is located in the data folder so that it is ready for exploration and plotting.
 
 ## Loading Libraries
@@ -82,5 +80,12 @@ final_timed_trips <- tidy_trips %>% mutate(Quarter = parse_date(Quarter,
 final_timed_trips
 ```
 
-## Data Exploration
+Now the data is clean and ready for analysis! Let's write this data to a CSV and do some exploration.
+
+## Write to CSV
+
+```{r}
+write.table(final_timed_trips, sep = ",", file = "data/clean_trips.csv", row.names = FALSE)
+```
+
 

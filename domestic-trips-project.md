@@ -3,8 +3,6 @@ Domestic Trips Clean
 Jack McGrath
 29/11/2021
 
-# Domestic Trips Clean
-
 In this short exercise I will attempt to clean the data from the
 domestic trips csv that is located in the data folder so that it is
 ready for exploration and plotting.
@@ -201,4 +199,11 @@ final_timed_trips
     ## 10 1998-03-01 Capital Country New South Wales Visiting 100.  
     ## # ... with 24,310 more rows
 
-## Data Exploration
+Now the data is clean and ready for analysis! Let’s write this data to a
+CSV and do some exploration.
+
+## Write to CSV
+
+``` r
+write.table(final_timed_trips, sep = ",", file = "data/clean_trips.csv", row.names = FALSE)
+```
